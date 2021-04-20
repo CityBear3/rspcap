@@ -6,6 +6,7 @@ use pnet::{
     datalink::{self, channel, Channel},
     packet::{
         ethernet::{EtherTypes, EthernetPacket},
+        icmp::echo_reply,
         ip::IpNextHeaderProtocols,
         ipv4::Ipv4Packet,
         ipv6::Ipv6Packet,
@@ -71,10 +72,13 @@ fn handle_ipv4(ethernet_packet: &EthernetPacket) {
         match packet.get_next_level_protocol() {
             IpNextHeaderProtocols::Tcp => {
                 handle_tcp(&packet);
-            }
+            },
             IpNextHeaderProtocols::Udp => {
                 handle_udp(&packet);
-            }
+            },
+            IpNextHeaderProtocols::Icmp => {
+                handle_icmp(&packet);
+            },
             _ => {
                 info!("Not a TCP or UDP packet");
             }
@@ -87,10 +91,10 @@ fn handle_ipv6(ethermet_packet: &EthernetPacket) {
         match packet.get_next_header() {
             IpNextHeaderProtocols::Tcp => {
                 handle_tcp(&packet);
-            }
+            },
             IpNextHeaderProtocols::Udp => {
                 handle_udp(&packet);
-            }
+            },
             _ => {
                 info!("Not a TCP or UDP packet");
             }
@@ -152,4 +156,26 @@ fn print_packet_info(
 
     println!("{}", "=".repeat(60));
     println!();
+}
+
+fn handle_icmp(packet: &Ipv4Packet) {
+    let icmp = echo_reply::EchoReplyPacket::new(packet.get_payload());
+
+    if let Some(icmp) = icmp {
+        print_packet_info_icmp(packet, &icmp, "ICMP");
+    }
+}
+
+fn print_packet_info_icmp(
+    layer_3: &Ipv4Packet,
+    icmp: &echo_reply::EchoReplyPacket,
+    protocol: &str,
+) {
+    println!(
+        "{} bytes from {}: icmp_seq={} ttl={}\n",
+        protocol,
+        layer_3.get_source(),
+        icmp.get_sequence_number(),
+        layer_3.get_ttl()
+    );
 }
