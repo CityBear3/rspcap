@@ -172,7 +172,7 @@ fn print_packet_info_icmp(
     protocol: &str,
 ) {
     println!(
-        "{} bytes from {}: icmp_seq={} ttl={}\n",
+        "{} packet from {}: icmp_seq={} ttl={}\n",
         protocol,
         layer_3.get_source(),
         icmp.get_sequence_number(),
