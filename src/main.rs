@@ -162,18 +162,17 @@ fn handle_icmp(packet: &Ipv4Packet) {
     let icmp = echo_reply::EchoReplyPacket::new(packet.get_payload());
 
     if let Some(icmp) = icmp {
-        print_packet_info_icmp(packet, &icmp, "ICMP");
+        print_packet_info_icmp(packet, &icmp);
     }
 }
 
 fn print_packet_info_icmp(
     layer_3: &Ipv4Packet,
-    icmp: &echo_reply::EchoReplyPacket,
-    protocol: &str,
+    icmp: &echo_reply::EchoReplyPacket
 ) {
     println!(
-        "{} packet from {}: icmp_seq={} ttl={}\n",
-        protocol,
+        "{} bytes from {}: icmp_seq={} ttl={}\n",
+        icmp.payload().len(),
         layer_3.get_source(),
         icmp.get_sequence_number(),
         layer_3.get_ttl()
