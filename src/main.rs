@@ -71,14 +71,16 @@ fn handle_ipv4(ethernet_packet: &EthernetPacket) {
     if let Some(packet) = Ipv4Packet::new(ethernet_packet.payload()) {
         match packet.get_next_level_protocol() {
             IpNextHeaderProtocols::Tcp => {
-                handle_tcp(&packet);
-            },
+                let tcp = TcpPacket::new(&packet.get_payload());
+                handle_layer4(&packet, &tcp, "TCP");
+            }
             IpNextHeaderProtocols::Udp => {
-                handle_udp(&packet);
-            },
+                let udp = UdpPacket::new(&packet.get_payload());
+                handle_layer4(&packet, &udp, "UDP");
+            }
             IpNextHeaderProtocols::Icmp => {
                 handle_icmp(&packet);
-            },
+            }
             _ => {
                 info!("Not a TCP or UDP packet");
             }
@@ -90,11 +92,13 @@ fn handle_ipv6(ethermet_packet: &EthernetPacket) {
     if let Some(packet) = Ipv6Packet::new(ethermet_packet.payload()) {
         match packet.get_next_header() {
             IpNextHeaderProtocols::Tcp => {
-                handle_tcp(&packet);
-            },
+                let tcp = TcpPacket::new(&packet.get_payload());
+                handle_layer4(&packet, &tcp, "TCP");
+            }
             IpNextHeaderProtocols::Udp => {
-                handle_udp(&packet);
-            },
+                let udp = UdpPacket::new(&packet.get_payload());
+                handle_layer4(&packet, &udp, "UDP");
+            }
             _ => {
                 info!("Not a TCP or UDP packet");
             }
@@ -102,17 +106,9 @@ fn handle_ipv6(ethermet_packet: &EthernetPacket) {
     }
 }
 
-fn handle_tcp(packet: &dyn GettableEndPoints) {
-    let tcp = TcpPacket::new(packet.get_payload());
-    if let Some(tcp) = tcp {
-        print_packet_info(packet, &tcp, "TCP");
-    }
-}
-
-fn handle_udp(packet: &dyn GettableEndPoints) {
-    let udp = UdpPacket::new(packet.get_payload());
-    if let Some(udp) = udp {
-        print_packet_info(packet, &udp, "UDP");
+fn handle_layer4<T: GettableEndPoints>(packet: &dyn GettableEndPoints, protocol: &Option<T>, pname: &str) {
+    if let Some(protocol) = protocol {
+        print_packet_info(packet, protocol, pname);
     }
 }
 
@@ -166,10 +162,7 @@ fn handle_icmp(packet: &Ipv4Packet) {
     }
 }
 
-fn print_packet_info_icmp(
-    layer_3: &Ipv4Packet,
-    icmp: &echo_reply::EchoReplyPacket
-) {
+fn print_packet_info_icmp(layer_3: &Ipv4Packet, icmp: &echo_reply::EchoReplyPacket) {
     println!(
         "{} bytes from {}: icmp_seq={} ttl={}\n",
         icmp.payload().len(),
