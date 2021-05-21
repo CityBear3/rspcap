@@ -1,4 +1,5 @@
-# rspcap
+# rspcap 
+[![Rust](https://github.com/CityBear3/rspcap/actions/workflows/rust.yml/badge.svg)](https://github.com/CityBear3/rspcap/actions/workflows/rust.yml)
 
 ### Usage
 1. Clone this repo
